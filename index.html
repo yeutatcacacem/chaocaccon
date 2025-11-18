@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart to QR 3D - Nam Helios</title>
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background: radial-gradient(ellipse at center, #0a0e2a 0%, #000000 100%);
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            perspective: 1000px;
+        }
+
+        .universe {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 5s infinite ease-in-out;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+        }
+
+        /* Canvas trái tim */
+        #pinkboard {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotateX(0deg) rotateY(0deg); 
+            z-index: 2;
+            opacity: 1;
+            transition: opacity 2.8s ease-in-out;
+            filter: drop-shadow(0 0 20px #ff2fa8);
+            transform-style: preserve-3d;
+        }
+
+        /* QR container */
+        #qr-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.6) rotateX(0deg) rotateY(0deg);
+            z-index: 4;
+            opacity: 0;
+            transition: opacity 1.8s ease-in-out, transform 1.8s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform-style: preserve-3d;
+        }
+
+        #qr-container.show {
+            opacity: 1 !important;
+            transform: translate(-50%, -50%) scale(1) rotateX(0deg) rotateY(0deg);
+            animation: glowPulse 4s infinite ease-in-out;
+        }
+
+        #qr-code {
+            width: 320px;
+            height: 320px;
+            background: #fff;
+            padding: 22px;
+            border-radius: 22px;
+            box-shadow: 0 0 40px rgba(255, 52, 144, 0.8);
+            animation: heartbeat 2.2s infinite ease-in-out;
+            transform-style: preserve-3d;
+            backdrop-filter: blur(10px);
+        }
+
+        #qr-code img {
+            width: 100%;
+            height: 100%;
+            animation: softShake 4.5s infinite ease-in-out;
+        }
+
+        .message {
+            margin-top: 20px;
+            color: white;
+            font-size: 20px;
+            opacity: 0;
+            transition: opacity 1.2s ease-in-out;
+            text-shadow: 0 0 20px #ff2fa8;
+            transform: translateZ(50px);
+        }
+
+        .message.show {
+            opacity: 1 !important;
+        }
+
+        /* ⭐ DÒNG CHỮ MỚI PHÁT SÁNG */
+        .secret-text {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 26px;
+            color: #ff4ecb;
+            opacity: 0;
+            letter-spacing: 2px;
+            font-weight: bold;
+            text-shadow: 
+                0 0 10px #ff37c9,
+                0 0 25px #ff22d7,
+                0 0 45px #ff0acb;
+            animation: sparkle 3s infinite ease-in-out;
+            transform: translateZ(30px);
+        }
+
+        .secret-text.show {
+            opacity: 1 !important;
+        }
+
+        /* ⭐ HIỆU ỨNG TỪ PANBAP - TRÁI TIM NHỎ RƠI */
+        .falling-heart {
+            position: absolute;
+            top: -20px;
+            color: #ff4da6;
+            font-size: 18px;
+            animation: fall linear forwards;
+            pointer-events: none;
+            text-shadow: 0 0 12px #ff2ebd;
+            transform-style: preserve-3d;
+        }
+
+        /* ⭐ HIỆU ỨNG 3D MỚI - VÌ SAO BAY */
+        .floating-star {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            animation: floatStar 20s infinite linear;
+            transform-style: preserve-3d;
+        }
+
+        /* ⭐ HIỆU ỨNG 3D MỚI - TINH VÂN NHỎ */
+        .small-nebula {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(15px);
+            opacity: 0.1;
+            animation: smallNebulaFloat 30s infinite ease-in-out;
+            transform-style: preserve-3d;
+        }
+
+        /* ⭐ HIỆU ỨNG 3D MỚI - CỤM SAO NHỎ */
+        .small-star-cluster {
+            position: absolute;
+            transform-style: preserve-3d;
+            animation: smallClusterRotate 20s infinite linear;
+        }
+
+        /* ⭐ HIỆU ỨNG 3D MỚI - VỆ TINH NHỎ */
+        .small-satellite {
+            position: absolute;
+            width: 1px;
+            height: 3px;
+            background: #00ffff;
+            animation: smallSatelliteOrbit 10s infinite linear;
+            transform-style: preserve-3d;
+            box-shadow: 0 0 5px #00ffff;
+        }
+
+        /* ⭐ HIỆU ỨNG 3D MỚI - HẠT LƯỢNG TỬ */
+        .quantum-dot {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: #ff00ff;
+            animation: quantumPulse 2s infinite ease-in-out;
+            transform-style: preserve-3d;
+            box-shadow: 0 0 8px #ff00ff;
+        }
+
+        /* ⭐ HIỆU ỨNG TƯƠNG TÁC */
+        .interactive-star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 4s infinite ease-in-out;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        .meteor-trail {
+            position: fixed;
+            border-radius: 2px;
+            pointer-events: none;
+            z-index: 100;
+            transition: all 0.1s ease;
+        }
+
+        .explosion-particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1001;
+            transform-origin: center;
+        }
+
+        .light-trail {
+            position: fixed;
+            pointer-events: none;
+            z-index: 999;
+            transform-origin: center;
+        }
+
+        .ripple-effect {
+            position: fixed;
+            pointer-events: none;
+            z-index: 998;
+            transform: translate(-50%, -50%);
+            background: transparent;
+        }
+
+        /* ⭐ HIỆU ỨNG CON TRỎ 3D */
+        .cursor-glow {
+            position: fixed;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(255, 0, 128, 0.6) 0%, rgba(255, 105, 180, 0.3) 30%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%) translateZ(0);
+            mix-blend-mode: screen;
+            box-shadow: 0 0 50px rgba(255, 0, 128, 0.8);
+            transition: all 0.2s ease;
+        }
+
+        /* ⭐ THÔNG BÁO HƯỚNG DẪN 3D */
+        .instruction {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateZ(50px);
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+            animation: instructionPulse 4s infinite;
+        }
+
+        /* ANIMATIONS */
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        @keyframes enhancedTwinkle {
+            0%, 100% { 
+                opacity: 0.4; 
+                transform: scale(1);
+                filter: brightness(1);
+            }
+            25% { 
+                opacity: 0.8; 
+                transform: scale(1.1);
+                filter: brightness(1.3);
+            }
+            50% { 
+                opacity: 1; 
+                transform: scale(1.2);
+                filter: brightness(1.5);
+            }
+            75% { 
+                opacity: 0.8; 
+                transform: scale(1.1);
+                filter: brightness(1.3);
+            }
+        }
+
+        @keyframes floatStar {
+            0% {
+                transform: translateZ(-500px) translateX(-100vw) translateY(-100vh);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateZ(500px) translateX(100vw) translateY(100vh);
+                opacity: 0;
+            }
+        }
+
+        @keyframes smallNebulaFloat {
+            0%, 100% { 
+                transform: translateZ(-300px) scale(1) rotate(0deg);
+                opacity: 0.08;
+            }
+            50% { 
+                transform: translateZ(-200px) scale(1.1) rotate(90deg);
+                opacity: 0.12;
+            }
+        }
+
+        @keyframes smallClusterRotate {
+            from { transform: rotateY(0deg) translateZ(-500px); }
+            to { transform: rotateY(360deg) translateZ(-500px); }
+        }
+
+        @keyframes smallSatelliteOrbit {
+            from { transform: rotateY(0deg) translateX(80px) translateZ(-150px); }
+            to { transform: rotateY(360deg) translateX(80px) translateZ(-150px); }
+        }
+
+        @keyframes quantumPulse {
+            0%, 100% { 
+                transform: scale(1) translateZ(0);
+                opacity: 0.7;
+            }
+            50% { 
+                transform: scale(1.3) translateZ(20px);
+                opacity: 1;
+            }
+        }
+
+        @keyframes floatGently {
+            0%, 100% { 
+                transform: translateY(0px) rotate(0deg); 
+            }
+            50% { 
+                transform: translateY(-10px) rotate(5deg); 
+            }
+        }
+
+        @keyframes starClick {
+            0% { transform: scale(1); }
+            50% { transform: scale(8); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes float3D {
+            0%, 100% { transform: translateY(0px) translateX(0px); }
+            25% { transform: translateY(-20px) translateX(10px); }
+            50% { transform: translateY(0px) translateX(20px); }
+            75% { transform: translateY(20px) translateX(10px); }
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(110vh) rotate(360deg) translateZ(50px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes sparkle {
+            0%   { opacity: 0.4; transform: scale(1) translateZ(30px); }
+            50%  { opacity: 1; transform: scale(1.05) translateZ(50px); }
+            100% { opacity: 0.4; transform: scale(1) translateZ(30px); }
+        }
+
+        /* EFFECTS QR + HEART */
+        @keyframes glowPulse {
+            0% { filter: drop-shadow(0 0 15px #ff008c); }
+            50% { filter: drop-shadow(0 0 45px #ff20d4); }
+            100% { filter: drop-shadow(0 0 15px #ff008c); }
+        }
+
+        @keyframes heartbeat {
+            0%   { transform: scale(1) translateZ(0); }
+            20%  { transform: scale(1.08) translateZ(20px); }
+            40%  { transform: scale(1) translateZ(0); }
+            60%  { transform: scale(1.08) translateZ(20px); }
+            80%  { transform: scale(1) translateZ(0); }
+            100% { transform: scale(1) translateZ(0); }
+        }
+
+        @keyframes softShake {
+            0%   { transform: translate(0,0) translateZ(0); }
+            25%  { transform: translate(1px,-1px) translateZ(10px); }
+            50%  { transform: translate(-1px, 1px) translateZ(-10px); }
+            75%  { transform: translate(1px, 1px) translateZ(5px); }
+            100% { transform: translate(0,0) translateZ(0); }
+        }
+
+        @keyframes instructionPulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="universe" id="universe"></div>
+    <div class="cursor-glow" id="cursorGlow"></div>
+    
+    <div class="instruction">
+        🚀 Di chuyển chuột để khám phá
+
+    </div>
+
+    <div class="container" id="mainContainer">
+        <canvas id="pinkboard"></canvas>
+
+        <div id="qr-container">
+            <div id="qr-code">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://me-qr.com/AVSRUIF5">
+            </div>
+            <div class="message">✨ Quét mã QR để khám phá ✨</div>
+        </div>
+
+        <!-- ⭐ Dòng chữ mới -->
+        <div class="secret-text" id="secret">Điều Gì Đưa Bạn Tới Đây</div>
+    </div>
+
+    <script>
+        /* ==============================
+           ⭐ TẠO VŨ TRỤ 3D VỚI SAO VÀ HIỆU ỨNG NHỎ
+        ===============================*/
+        function createUniverse() {
+            const universe = document.getElementById('universe');
+            
+            // Tạo các ngôi sao nền
+            for (let i = 0; i < 200; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                
+                const size = Math.random() * 2;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                
+                star.style.left = `${Math.random() * 100}vw`;
+                star.style.top = `${Math.random() * 100}vh`;
+                
+                star.style.animationDelay = `${Math.random() * 5}s`;
+                
+                universe.appendChild(star);
+            }
+
+            // Tạo các vì sao bay 3D
+            for (let i = 0; i < 30; i++) {
+                createFloatingStar();
+            }
+
+            // Tạo tinh vân nhỏ
+            for (let i = 0; i < 8; i++) {
+                createSmallNebula();
+            }
+
+            // Tạo cụm sao nhỏ
+            for (let i = 0; i < 6; i++) {
+                createSmallStarCluster();
+            }
+
+            // Tạo vệ tinh nhỏ
+            for (let i = 0; i < 4; i++) {
+                createSmallSatellite();
+            }
+
+            // Tạo hạt lượng tử
+            for (let i = 0; i < 15; i++) {
+                createQuantumDot();
+            }
+
+            // Tạo sao tương tác
+            for (let i = 0; i < 20; i++) {
+                createInteractiveStar();
+            }
+        }
+
+        function createFloatingStar() {
+            const star = document.createElement('div');
+            star.classList.add('floating-star');
+            
+            const size = 1 + Math.random() * 2;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            
+            star.style.left = `${Math.random() * 100}vw`;
+            star.style.top = `${Math.random() * 100}vh`;
+            
+            const duration = 8 + Math.random() * 15;
+            star.style.animationDuration = `${duration}s`;
+            
+            const colors = ['#ffffff', '#ff6b6b', '#4ecdc4', '#45b7d1', '#ffbe0b'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            star.style.background = color;
+            star.style.boxShadow = `0 0 ${3 + Math.random() * 5}px ${color}`;
+            
+            document.body.appendChild(star);
+        }
+
+        function createSmallNebula() {
+            const nebula = document.createElement('div');
+            nebula.classList.add('small-nebula');
+            
+            const size = 50 + Math.random() * 100;
+            nebula.style.width = `${size}px`;
+            nebula.style.height = `${size}px`;
+            
+            nebula.style.left = `${Math.random() * 100}%`;
+            nebula.style.top = `${Math.random() * 100}%`;
+            
+            const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#ffbe0b', '#8338ec'];
+            const color1 = colors[Math.floor(Math.random() * colors.length)];
+            const color2 = colors[Math.floor(Math.random() * colors.length)];
+            nebula.style.background = `radial-gradient(circle, ${color1}, ${color2}, transparent)`;
+            
+            nebula.style.animationDelay = `${Math.random() * 20}s`;
+            
+            document.body.appendChild(nebula);
+        }
+
+        function createSmallStarCluster() {
+            const cluster = document.createElement('div');
+            cluster.classList.add('small-star-cluster');
+            
+            const starCount = 5 + Math.floor(Math.random() * 8);
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.style.position = 'absolute';
+                star.style.width = '1px';
+                star.style.height = '1px';
+                star.style.background = 'white';
+                star.style.borderRadius = '50%';
+                star.style.left = `${Math.random() * 40}px`;
+                star.style.top = `${Math.random() * 40}px`;
+                star.style.boxShadow = '0 0 3px white';
+                
+                cluster.appendChild(star);
+            }
+            
+            cluster.style.left = `${Math.random() * 100}%`;
+            cluster.style.top = `${Math.random() * 100}%`;
+            cluster.style.animationDelay = `${Math.random() * 10}s`;
+            
+            document.body.appendChild(cluster);
+        }
+
+        function createSmallSatellite() {
+            const satellite = document.createElement('div');
+            satellite.classList.add('small-satellite');
+            
+            satellite.style.animationDelay = `${Math.random() * 10}s`;
+            
+            document.body.appendChild(satellite);
+        }
+
+        function createQuantumDot() {
+            const dot = document.createElement('div');
+            dot.classList.add('quantum-dot');
+            
+            dot.style.left = `${Math.random() * 100}vw`;
+            dot.style.top = `${Math.random() * 100}vh`;
+            dot.style.animationDelay = `${Math.random() * 2}s`;
+            
+            const colors = ['#ff00ff', '#00ffff', '#ffff00', '#ff6b6b', '#4ecdc4'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            dot.style.background = color;
+            dot.style.boxShadow = `0 0 8px ${color}`;
+            
+            document.body.appendChild(dot);
+        }
+
+        function createInteractiveStar() {
+            const star = document.createElement('div');
+            star.className = 'interactive-star';
+            star.style.animation = 'float3D 8s infinite ease-in-out';
+            
+            star.style.width = '4px';
+            star.style.height = '4px';
+            star.style.background = 'white';
+            star.style.borderRadius = '50%';
+            star.style.boxShadow = '0 0 10px white';
+            star.style.left = Math.random() * 100 + 'vw';
+            star.style.top = Math.random() * 100 + 'vh';
+            star.style.cursor = 'pointer';
+            star.style.zIndex = '2';
+            star.style.transition = 'all 0.5s ease';
+            
+            star.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(5)';
+                this.style.background = '#ffff00';
+                this.style.boxShadow = '0 0 30px #ffff00, 0 0 60px #ffa500';
+                this.style.zIndex = '1000';
+            });
+            
+            star.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+                this.style.background = 'white';
+                this.style.boxShadow = '0 0 10px white';
+                this.style.zIndex = '2';
+            });
+            
+            star.addEventListener('click', function(e) {
+                e.stopPropagation();
+                createStarExplosion(e.clientX, e.clientY);
+                this.style.animation = 'starClick 0.6s ease';
+                setTimeout(() => {
+                    this.style.animation = 'float3D 8s infinite ease-in-out';
+                }, 600);
+            });
+            
+            document.body.appendChild(star);
+        }
+/* ==============================
+   ⭐ HIỆU ỨNG DI CHUYỂN 3D ĐƠN GIẢN
+===============================*/
+function init3DEffect() {
+    const container = document.getElementById('mainContainer');
+    const cursorGlow = document.getElementById('cursorGlow');
+    
+    let mouseX = 0;
+    let mouseY = 0;
+    let containerX = 0;
+    let containerY = 0;
+    
+    // Theo dõi vị trí chuột
+    document.addEventListener('mousemove', (e) => {
+        // Tính toán vị trí chuột chuẩn hóa (-1 đến 1)
+        mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+        mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+        
+        // Cập nhật hiệu ứng con trỏ
+        cursorGlow.style.left = e.clientX + 'px';
+        cursorGlow.style.top = e.clientY + 'px';
+        
+        // Tạo chấm sáng nhỏ khi di chuột (thay vì tia dài)
+        if (Math.random() < 0.3) {
+            createSparkle(e.clientX, e.clientY);
+        }
+    });
+    
+    // Hiệu ứng khi chuột vào/ra khỏi trang
+    document.addEventListener('mouseenter', () => {
+        cursorGlow.style.opacity = '1';
+    });
+    
+    document.addEventListener('mouseleave', () => {
+        cursorGlow.style.opacity = '0';
+    });
+    
+    // Click để tạo hiệu ứng đặc biệt
+    document.addEventListener('click', (e) => {
+        createRippleEffect(e.clientX, e.clientY);
+    });
+    
+    // Animation loop cho hiệu ứng 3D mượt mà
+    function animate() {
+        // Làm mượt chuyển động với easing
+        containerX += (mouseX * 15 - containerX) * 0.05;
+        containerY += (mouseY * 15 - containerY) * 0.05;
+        
+        // Áp dụng transform 3D
+        container.style.transform = `
+            rotateY(${containerX}deg)
+            rotateX(${-containerY}deg)
+        `;
+        
+        // Hiệu ứng parallax nhẹ cho các phần tử
+        updateParallaxElements(mouseX, mouseY);
+        
+        // Cập nhật hiệu ứng con trỏ
+        updateCursorEffect(mouseX, mouseY);
+        
+        requestAnimationFrame(animate);
+    }
+    
+    // Hiệu ứng parallax đơn giản
+    function updateParallaxElements(x, y) {
+        const elements = document.querySelectorAll('.floating-star, .quantum-dot');
+        
+        elements.forEach((element, index) => {
+            const depth = (index % 3 + 1) * 0.3;
+            const moveX = x * 15 * depth;
+            const moveY = y * 15 * depth;
+            
+            const baseTransform = element.style.transform.split('translate')[0];
+            element.style.transform = `${baseTransform} translate(${moveX}px, ${moveY}px)`;
+        });
+    }
+    
+    // Cập nhật hiệu ứng con trỏ
+    function updateCursorEffect(x, y) {
+        const intensity = Math.sqrt(x * x + y * y);
+        const scale = 1 + intensity * 0.3;
+        
+        cursorGlow.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        cursorGlow.style.filter = `blur(${5 + intensity * 5}px)`;
+    }
+    
+    animate();
+}
+
+/* ==============================
+   ⭐ TẠO CHẤM SÁNG KHI DI CHUỘT (thay vì tia dài)
+===============================*/
+function createSparkle(x, y) {
+    const sparkle = document.createElement('div');
+    sparkle.style.position = 'fixed';
+    sparkle.style.left = x + 'px';
+    sparkle.style.top = y + 'px';
+    sparkle.style.width = '4px';
+    sparkle.style.height = '4px';
+    sparkle.style.background = 'radial-gradient(circle, #ffffff, #ff6b6b, transparent)';
+    sparkle.style.borderRadius = '50%';
+    sparkle.style.boxShadow = '0 0 8px #ff6b6b';
+    sparkle.style.pointerEvents = 'none';
+    sparkle.style.zIndex = '100';
+    
+    document.body.appendChild(sparkle);
+    
+    // Animation đơn giản - phóng to rồi biến mất
+    sparkle.animate([
+        { 
+            transform: 'scale(0)',
+            opacity: 0
+        },
+        { 
+            transform: 'scale(1.5)',
+            opacity: 1
+        },
+        { 
+            transform: 'scale(0)',
+            opacity: 0
+        }
+    ], {
+        duration: 600,
+        easing: 'ease-out'
+    });
+    
+    setTimeout(() => {
+        if (sparkle.parentNode) {
+            sparkle.remove();
+        }
+    }, 600);
+}
+
+/* ==============================
+   ⭐ HIỆU ỨNG GỢN SÓNG KHI CLICK
+===============================*/
+function createRippleEffect(x, y) {
+    const ripple = document.createElement('div');
+    ripple.style.position = 'fixed';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    ripple.style.width = '20px';
+    ripple.style.height = '20px';
+    ripple.style.border = '2px solid #00ffff';
+    ripple.style.borderRadius = '50%';
+    ripple.style.boxShadow = '0 0 20px #00ffff';
+    ripple.style.pointerEvents = 'none';
+    ripple.style.zIndex = '99';
+    ripple.style.transform = 'translate(-50%, -50%)';
+    
+    document.body.appendChild(ripple);
+    
+    // Animation gợn sóng
+    ripple.animate([
+        { 
+            transform: 'translate(-50%, -50%) scale(1)',
+            opacity: 1,
+            borderWidth: '2px'
+        },
+        { 
+            transform: 'translate(-50%, -50%) scale(4)',
+            opacity: 0,
+            borderWidth: '1px'
+        }
+    ], {
+        duration: 800,
+        easing: 'ease-out'
+    });
+    
+    setTimeout(() => {
+        if (ripple.parentNode) {
+            ripple.remove();
+        }
+    }, 800);
+}
+
+/* ==============================
+   ⭐ KHỞI TẠO HIỆU ỨNG DI CHUỘT
+===============================*/
+function initializeMouseEffects() {
+    console.log('🖱️ Khởi tạo hiệu ứng di chuột...');
+    
+    // Khởi tạo hiệu ứng di chuột chính
+    init3DEffect();
+    
+    console.log('✅ Hiệu ứng di chuột đã sẵn sàng!');
+}
+
+// Khởi chạy khi trang load
+window.addEventListener('load', initializeMouseEffects);
+        /* ==============================
+           ⭐ HIỆU ỨNG SAO BĂNG VÀ TƯƠNG TÁC
+        ===============================*/
+        function createMeteor(x, y, speed) {
+            const meteor = document.createElement('div');
+            meteor.className = 'meteor-trail';
+            
+            const length = 80 + speed * 50;
+            const width = 3 + speed * 2;
+            
+            meteor.style.width = `${width}px`;
+            meteor.style.height = `${length}px`;
+            meteor.style.left = x + 'px';
+            meteor.style.top = y + 'px';
+            
+            const colors = [
+                'linear-gradient(to bottom, #ffffff, #ff0000, transparent)',
+                'linear-gradient(to bottom, #ffffff, #00ffff, transparent)',
+                'linear-gradient(to bottom, #ffffff, #ffff00, transparent)',
+                'linear-gradient(to bottom, #ffffff, #ff00ff, transparent)'
+            ];
+            meteor.style.background = colors[Math.floor(Math.random() * colors.length)];
+            meteor.style.boxShadow = '0 0 30px currentColor';
+            
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 100 + speed * 150;
+            const targetX = x + Math.cos(angle) * distance;
+            const targetY = y + Math.sin(angle) * distance;
+            
+            const animation = meteor.animate([
+                { 
+                    transform: 'translate(0, 0) rotate(0deg)',
+                    opacity: 1,
+                    filter: 'blur(0px) brightness(2)'
+                },
+                { 
+                    transform: `translate(${targetX - x}px, ${targetY - y}px) rotate(180deg)`,
+                    opacity: 0,
+                    filter: 'blur(10px) brightness(0.5)'
+                }
+            ], {
+                duration: 400 + speed * 300,
+                easing: 'cubic-bezier(0.1, 0.8, 0.2, 1)'
+            });
+            
+            document.body.appendChild(meteor);
+            animation.onfinish = () => meteor.remove();
+            setTimeout(() => meteor.remove(), 2000);
+        }
+
+        function createLightTrail(x, y) {
+            const trail = document.createElement('div');
+            trail.className = 'light-trail';
+            
+            trail.style.width = '8px';
+            trail.style.height = '8px';
+            trail.style.left = x + 'px';
+            trail.style.top = y + 'px';
+            trail.style.background = 'radial-gradient(circle, #ffff00, #ffa500, transparent)';
+            trail.style.boxShadow = '0 0 20px #ffff00';
+            trail.style.borderRadius = '50%';
+            
+            document.body.appendChild(trail);
+            
+            trail.animate([
+                { transform: 'scale(1)', opacity: 1 },
+                { transform: 'scale(0)', opacity: 0 }
+            ], { duration: 500, easing: 'ease-out' });
+            
+            setTimeout(() => trail.remove(), 500);
+        }
+
+        function createRippleEffect(x, y) {
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple-effect';
+            
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.style.width = '20px';
+            ripple.style.height = '20px';
+            ripple.style.border = '3px solid #00ffff';
+            ripple.style.borderRadius = '50%';
+            ripple.style.boxShadow = '0 0 30px #00ffff';
+            
+            document.body.appendChild(ripple);
+            
+            ripple.animate([
+                { 
+                    transform: 'translate(-50%, -50%) scale(1)',
+                    opacity: 1,
+                    borderWidth: '3px'
+                },
+                { 
+                    transform: 'translate(-50%, -50%) scale(8)',
+                    opacity: 0,
+                    borderWidth: '1px'
+                }
+            ], { duration: 1200, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+            
+            setTimeout(() => ripple.remove(), 1200);
+        }
+
+        function createStarExplosion(x, y) {
+            const particleCount = 12;
+            
+            for (let i = 0; i < particleCount; i++) {
+                setTimeout(() => {
+                    createExplosionParticle(x, y);
+                }, i * 30);
+            }
+        }
+
+        function createExplosionParticle(x, y) {
+            const particle = document.createElement('div');
+            particle.className = 'explosion-particle';
+            
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+            particle.style.width = '6px';
+            particle.style.height = '6px';
+            particle.style.borderRadius = '50%';
+            particle.style.boxShadow = '0 0 15px currentColor';
+            
+            const colors = ['#ff0000', '#00ffff', '#ffff00', '#ff00ff', '#00ff00'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            particle.style.background = color;
+            
+            document.body.appendChild(particle);
+            
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 40 + Math.random() * 80;
+            const targetX = x + Math.cos(angle) * distance;
+            const targetY = y + Math.sin(angle) * distance;
+            
+            particle.animate([
+                { 
+                    transform: 'scale(1) translate(0, 0)',
+                    opacity: 1,
+                    filter: 'brightness(2)'
+                },
+                { 
+                    transform: `scale(0.2) translate(${targetX - x}px, ${targetY - y}px)`,
+                    opacity: 0,
+                    filter: 'brightness(0.5)'
+                }
+            ], { duration: 800, easing: 'cubic-bezier(0.1, 0.8, 0.2, 1)' });
+            
+            setTimeout(() => particle.remove(), 800);
+        }
+
+
+/* ==============================
+   ⭐ HIỆU ỨNG DI CHUYỂN 3D ĐỘ NHẠY CAO
+===============================*/
+function init3DEffect() {
+    const container = document.getElementById('mainContainer');
+    const cursorGlow = document.getElementById('cursorGlow');
+    
+    let mouseX = 0;
+    let mouseY = 0;
+    let containerX = 0;
+    let containerY = 0;
+    
+    // Tăng kích thước và độ sáng con trỏ
+    cursorGlow.style.width = '150px';
+    cursorGlow.style.height = '150px';
+    cursorGlow.style.background = 'radial-gradient(circle, rgba(255, 0, 128, 0.8) 0%, rgba(255, 105, 180, 0.5) 40%, transparent 70%)';
+    cursorGlow.style.boxShadow = '0 0 80px rgba(255, 0, 128, 1)';
+    
+    // Theo dõi vị trí chuột với độ nhạy cao
+    document.addEventListener('mousemove', (e) => {
+        // TĂNG ĐỘ NHẠY: từ 2 lên 4
+        mouseX = (e.clientX / window.innerWidth - 0.5) * 4;
+        mouseY = (e.clientY / window.innerHeight - 0.5) * 4;
+        
+        // Cập nhật hiệu ứng con trỏ
+        cursorGlow.style.left = e.clientX + 'px';
+        cursorGlow.style.top = e.clientY + 'px';
+        
+        // Tăng tần suất tạo chấm sáng
+        if (Math.random() < 0.6) { // Tăng từ 0.3 lên 0.6
+            createSparkle(e.clientX, e.clientY);
+        }
+    });
+    
+    // Hiệu ứng khi chuột vào/ra khỏi trang
+    document.addEventListener('mouseenter', () => {
+        cursorGlow.style.opacity = '1';
+        cursorGlow.style.transform = 'translate(-50%, -50%) scale(1.2)';
+    });
+    
+    document.addEventListener('mouseleave', () => {
+        cursorGlow.style.opacity = '0';
+        cursorGlow.style.transform = 'translate(-50%, -50%) scale(0.8)';
+    });
+    
+    // Click để tạo hiệu ứng đặc biệt
+    document.addEventListener('click', (e) => {
+        createRippleEffect(e.clientX, e.clientY);
+        createQuickExplosion(e.clientX, e.clientY);
+    });
+    
+    // Animation loop cho hiệu ứng 3D mượt mà với độ nhạy cao
+    function animate() {
+        // TĂNG TỐC ĐỘ PHẢN HỒI: từ 15 lên 30 và 0.05 lên 0.1
+        containerX += (mouseX * 30 - containerX) * 0.1;
+        containerY += (mouseY * 30 - containerY) * 0.1;
+        
+        // Áp dụng transform 3D với độ nhạy cao
+        container.style.transform = `
+            rotateY(${containerX}deg)
+            rotateX(${-containerY}deg)
+            scale(${1 + Math.abs(mouseX + mouseY) * 0.1})
+        `;
+        
+        // Hiệu ứng parallax với độ nhạy cao
+        updateParallaxElements(mouseX, mouseY);
+        
+        // Cập nhật hiệu ứng con trỏ với phản hồi nhanh
+        updateCursorEffect(mouseX, mouseY);
+        
+        requestAnimationFrame(animate);
+    }
+    
+    // Hiệu ứng parallax với độ nhạy cao
+    function updateParallaxElements(x, y) {
+        const elements = {
+            '.floating-star': 1.2,      // Tăng độ parallax
+            '.quantum-dot': 1.5,        // Tăng độ parallax
+            '.small-nebula': 0.8,
+            '.small-star-cluster': 1.0
+        };
+        
+        Object.entries(elements).forEach(([selector, depth]) => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach((element) => {
+                // TĂNG KHOẢNG CÁCH DI CHUYỂN: từ 15 lên 25
+                const moveX = x * 25 * depth;
+                const moveY = y * 25 * depth;
+                const baseTransform = element.style.transform.split('translate')[0];
+                element.style.transform = `${baseTransform} translate(${moveX}px, ${moveY}px)`;
+            });
+        });
+    }
+    
+    // Cập nhật hiệu ứng con trỏ với độ nhạy cao
+    function updateCursorEffect(x, y) {
+        const intensity = Math.sqrt(x * x + y * y);
+        // TĂNG HIỆU ỨNG SCALE: từ 0.3 lên 0.8
+        const scale = 1 + intensity * 0.8;
+        // TĂNG ĐỘ BLUR: từ 5 lên 10
+        const blur = 10 + intensity * 15;
+        const colorIntensity = Math.min(1.5, intensity * 3); // Tăng cường độ màu
+        
+        cursorGlow.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        cursorGlow.style.filter = `blur(${blur}px) brightness(${1 + colorIntensity})`;
+        cursorGlow.style.background = `
+            radial-gradient(
+                circle,
+                rgba(255, 0, 128, ${0.9 + colorIntensity * 0.3}) 0%,
+                rgba(255, 105, 180, ${0.7 + colorIntensity * 0.4}) 40%,
+                transparent 70%
+            )
+        `;
+    }
+    
+    animate();
+}
+
+/* ==============================
+   ⭐ TẠO CHẤM SÁNG NHANH VÀ RÕ HƠN
+===============================*/
+function createSparkle(x, y) {
+    const sparkle = document.createElement('div');
+    sparkle.style.position = 'fixed';
+    sparkle.style.left = x + 'px';
+    sparkle.style.top = y + 'px';
+    // TĂNG KÍCH THƯỚC: từ 4px lên 6px
+    sparkle.style.width = '6px';
+    sparkle.style.height = '6px';
+    
+    // Màu sắc rực rỡ hơn
+    const colors = [
+        'radial-gradient(circle, #ffffff, #ff4444, transparent)',
+        'radial-gradient(circle, #ffffff, #44ff44, transparent)',
+        'radial-gradient(circle, #ffffff, #4444ff, transparent)',
+        'radial-gradient(circle, #ffffff, #ffff44, transparent)'
+    ];
+    sparkle.style.background = colors[Math.floor(Math.random() * colors.length)];
+    sparkle.style.borderRadius = '50%';
+    // TĂNG ĐỘ SÁNG: từ 8px lên 15px
+    sparkle.style.boxShadow = '0 0 15px currentColor';
+    sparkle.style.pointerEvents = 'none';
+    sparkle.style.zIndex = '100';
+    
+    document.body.appendChild(sparkle);
+    
+    // Animation NHANH HƠN: từ 600ms xuống 400ms
+    sparkle.animate([
+        { 
+            transform: 'scale(0) rotate(0deg)',
+            opacity: 0
+        },
+        { 
+            transform: 'scale(2) rotate(180deg)', // Tăng scale
+            opacity: 1
+        },
+        { 
+            transform: 'scale(0) rotate(360deg)',
+            opacity: 0
+        }
+    ], {
+        duration: 400, // Giảm thời gian
+        easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)'
+    });
+    
+    setTimeout(() => {
+        if (sparkle.parentNode) {
+            sparkle.remove();
+        }
+    }, 400);
+}
+
+/* ==============================
+   ⭐ HIỆU ỨNG GỢN SÓNG NHANH HƠN
+===============================*/
+function createRippleEffect(x, y) {
+    const ripple = document.createElement('div');
+    ripple.style.position = 'fixed';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    ripple.style.width = '25px'; // Tăng kích thước
+    ripple.style.height = '25px';
+    ripple.style.border = '3px solid #00ffff'; // Tăng độ dày
+    ripple.style.borderRadius = '50%';
+    ripple.style.boxShadow = '0 0 30px #00ffff, 0 0 60px #00ffff'; // Tăng độ sáng
+    ripple.style.pointerEvents = 'none';
+    ripple.style.zIndex = '99';
+    ripple.style.transform = 'translate(-50%, -50%)';
+    
+    document.body.appendChild(ripple);
+    
+    // Animation NHANH HƠN: từ 800ms xuống 600ms
+    ripple.animate([
+        { 
+            transform: 'translate(-50%, -50%) scale(1)',
+            opacity: 1,
+            borderWidth: '3px'
+        },
+        { 
+            transform: 'translate(-50%, -50%) scale(5)', // Tăng scale
+            opacity: 0,
+            borderWidth: '1px'
+        }
+    ], {
+        duration: 600, // Giảm thời gian
+        easing: 'cubic-bezier(0.1, 0.8, 0.2, 1)'
+    });
+    
+    setTimeout(() => {
+        if (ripple.parentNode) {
+            ripple.remove();
+        }
+    }, 600);
+}
+
+/* ==============================
+   ⭐ HIỆU ỨNG NỔ NHANH KHI CLICK
+===============================*/
+function createQuickExplosion(x, y) {
+    const particleCount = 6; // Giảm số lượng nhưng tăng tốc độ
+    
+    for (let i = 0; i < particleCount; i++) {
+        createExplosionParticle(x, y);
+    }
+}
+
+function createExplosionParticle(x, y) {
+    const particle = document.createElement('div');
+    particle.style.position = 'fixed';
+    particle.style.left = x + 'px';
+    particle.style.top = y + 'px';
+    particle.style.width = '5px';
+    particle.style.height = '5px';
+    particle.style.borderRadius = '50%';
+    particle.style.boxShadow = '0 0 12px currentColor';
+    particle.style.pointerEvents = 'none';
+    particle.style.zIndex = '100';
+    
+    const colors = ['#ff4444', '#44ff44', '#4444ff', '#ffff44', '#ff44ff'];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    particle.style.background = color;
+    
+    document.body.appendChild(particle);
+    
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 30 + Math.random() * 50;
+    const targetX = x + Math.cos(angle) * distance;
+    const targetY = y + Math.sin(angle) * distance;
+    
+    // Animation RẤT NHANH: 500ms
+    particle.animate([
+        { 
+            transform: 'scale(1) translate(0, 0)',
+            opacity: 1
+        },
+        { 
+            transform: `scale(0.3) translate(${targetX - x}px, ${targetY - y}px)`,
+            opacity: 0
+        }
+    ], {
+        duration: 500,
+        easing: 'cubic-bezier(0.1, 0.9, 0.2, 1)'
+    });
+    
+    setTimeout(() => {
+        if (particle.parentNode) {
+            particle.remove();
+        }
+    }, 500);
+}
+
+/* ==============================
+   ⭐ KHỞI TẠO HIỆU ỨNG DI CHUỘT ĐỘ NHẠY CAO
+===============================*/
+function initializeMouseEffects() {
+    console.log('🎯 Khởi tạo hiệu ứng di chuột ĐỘ NHẠY CAO...');
+    
+    // Khởi tạo hiệu ứng di chuột chính
+    init3DEffect();
+    
+    console.log('⚡ Hiệu ứng di chuột ĐỘ NHẠY CAO đã sẵn sàng!');
+}
+
+// Khởi chạy khi trang load
+window.addEventListener('load', initializeMouseEffects);
+
+        /* ==============================
+           ⭐ HIỆU ỨNG TỪ PANBAP - TRÁI TIM NHỎ RƠI
+        ===============================*/
+        function createFallingHeart() {
+            const heart = document.createElement("div");
+            heart.classList.add("falling-heart");
+            heart.innerHTML = "❤";
+
+            heart.style.left = Math.random() * window.innerWidth + "px";
+            heart.style.fontSize = (12 + Math.random() * 10) + "px";
+            heart.style.animationDuration = (2 + Math.random() * 2) + "s";
+
+            document.body.appendChild(heart);
+            setTimeout(() => heart.remove(), 4000);
+        }
+
+        /* ============================== 
+           ⚡ CODE GỐC TRÁI TIM TAN + QR
+        ===============================*/
+        var settings = {
+            particles: { length:4800, duration:2.6, velocity:210, effect:-0.75, size:14 },
+        };
+
+        var Point=function(x,y){this.x=x||0;this.y=y||0;};
+        Point.prototype.clone=function(){return new Point(this.x,this.y);};
+        Point.prototype.length=function(l){if(l===undefined)return Math.sqrt(this.x*this.x+this.y*this.y);this.normalize();this.x*=l;this.y*=l;return this;};
+        Point.prototype.normalize=function(){var l=this.length();this.x/=l;this.y/=l;return this;};
+
+        var Particle=function(){this.position=new Point();this.velocity=new Point();this.acceleration=new Point();this.age=0;};
+        Particle.prototype.initialize=function(x,y,dx,dy){this.position.x=x;this.position.y=y;this.velocity.x=dx;this.velocity.y=dy;this.acceleration.x=dx*settings.particles.effect;this.acceleration.y=dy*settings.particles.effect;this.age=0;};
+        Particle.prototype.update=function(dt){this.position.x+=this.velocity.x*dt;this.position.y+=this.velocity.y*dt;this.velocity.x+=this.acceleration.x*dt;this.velocity.y+=this.acceleration.y*dt;this.age+=dt;};
+        Particle.prototype.draw=function(ctx,img){function ease(t){return(--t)*t*t+1;}var s=img.width*ease(this.age/settings.particles.duration);ctx.globalAlpha=1-this.age/settings.particles.duration;ctx.drawImage(img,this.position.x-s/2,this.position.y-s/2,s,s);};
+
+        var ParticlePool=function(l){this.particles=new Array(l);for(var i=0;i<l;i++)this.particles[i]=new Particle();this.firstActive=0;this.firstFree=0;this.duration=settings.particles.duration;};
+
+        ParticlePool.prototype.add=function(x,y,dx,dy){this.particles[this.firstFree].initialize(x,y,dx,dy);this.firstFree++;if(this.firstFree===this.particles.length)this.firstFree=0;if(this.firstActive===this.firstFree){this.firstActive++;if(this.firstActive===this.particles.length)this.firstActive=0;}};
+
+        ParticlePool.prototype.update=function(dt){var i;if(this.firstActive<this.firstFree){for(i=this.firstActive;i<this.firstFree;i++)this.particles[i].update(dt);}else{for(i=this.firstActive;i<this.particles.length;i++)this.particles[i].update(dt);for(i=0;i<this.firstFree;i++)this.particles[i].update(dt);}while(this.particles[this.firstActive].age>=this.duration&&this.firstActive!==this.firstFree){this.firstActive++;if(this.firstActive===this.particles.length)this.firstActive=0;}};
+
+        ParticlePool.prototype.draw=function(ctx,img){var i;if(this.firstActive<this.firstFree){for(i=this.firstActive;i<this.firstFree;i++)this.particles[i].draw(ctx,img);}else{for(i=this.firstActive;i<this.particles.length;i++)this.particles[i].draw(ctx,img);for(i=0;i<this.firstFree;i++)this.particles[i].draw(ctx,img);}};
+
+        (function(canvas){
+            var ctx=canvas.getContext("2d");
+            var particles=new ParticlePool(settings.particles.length);
+            var particleRate=settings.particles.length/settings.particles.duration;
+            var time;
+
+            var heartPoint=function(t){
+                return new Point(
+                    160*Math.pow(Math.sin(t),3),
+                    130*Math.cos(t)-50*Math.cos(2*t)-20*Math.cos(3*t)-10*Math.cos(4*t)+25
+                );
+            };
+
+            var img=(function(){
+                var c=document.createElement("canvas");
+                var cx=c.getContext("2d");
+                c.width=c.height=settings.particles.size;
+                cx.beginPath();
+
+                var t=-Math.PI,p=convert(t);
+                cx.moveTo(p.x,p.y);
+
+                function convert(t){
+                    var pt=heartPoint(t);
+                    return new Point(
+                        c.width/2+pt.x*c.width/350,
+                        c.height/2-pt.y*c.height/350
+                    );
+                }
+
+                while(t<Math.PI){
+                    t+=0.01;
+                    p=convert(t);
+                    cx.lineTo(p.x,p.y);
+                }
+                cx.fillStyle="#ff3eaa";
+                cx.fill();
+
+                var im=new Image();
+                im.src=c.toDataURL();
+                return im;
+            })();
+
+            var start=Date.now();
+            var qrShown=false;
+
+            function render(){
+                requestAnimationFrame(render);
+
+                var newT=Date.now()/1000;
+                var dt=newT-(time||newT);
+                time=newT;
+
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+
+                var e=Date.now()-start;
+
+                if(e>5000 && !qrShown){
+                    qrShown=true;
+
+                    document.getElementById("pinkboard").style.opacity="0";
+
+                    setTimeout(()=>{
+                        document.getElementById("qr-container").classList.add("show");
+
+                        setTimeout(()=>{
+                            document.querySelector(".message").classList.add("show");
+                            document.getElementById("secret").classList.add("show");
+                        },900);
+
+                    },700);
+                }
+
+                var effective=particleRate;
+                if(e>3500) effective*=Math.max(0,1-(e-3500)/2000);
+
+                var amount=effective*dt;
+                for(var i=0;i<amount;i++){
+                    var pos=heartPoint(Math.PI-2*Math.PI*Math.random());
+                    var dir=pos.clone().length(settings.particles.velocity);
+                    particles.add(
+                        canvas.width/2+pos.x,
+                        canvas.height/2-pos.y,
+                        dir.x,-dir.y
+                    );
+                }
+
+                particles.update(dt);
+                particles.draw(ctx,img);
+            }
+
+            function resize(){
+                canvas.width=window.innerWidth*1.25;
+                canvas.height=window.innerHeight*1.25;
+            }
+            window.onresize=resize;
+
+            resize();
+            render();
+
+        })(document.getElementById("pinkboard"));
+
+
+        /* ==============================
+           ⭐ KHỞI CHẠY TẤT CẢ HIỆU ỨNG
+        ===============================*/
+        function initializeAllEffects() {
+            console.log('🚀 Khởi tạo hệ thống 3D hoàn chỉnh...');
+            
+            createUniverse();
+            init3DEffect();
+            
+            setInterval(createFallingHeart, 400);
+
+            setTimeout(() => {
+                document.querySelector('.instruction').style.opacity = '0';
+                setTimeout(() => {
+                    document.querySelector('.instruction').style.display = 'none';
+                }, 1000);
+            }, 5000);
+
+            console.log('🎉 Hệ thống 3D hoàn chỉnh đã sẵn sàng!');
+        }
+
+        window.addEventListener('load', initializeAllEffects);
+        window.addEventListener('resize', () => {
+            const container = document.getElementById('mainContainer');
+            container.style.transform = 'rotateY(0deg) rotateX(0deg) scale(1)';
+        });
+
+    </script>
+        <!-- ⭐ CREDIT RẤT NHỎ + MỜ + ĐỔI MÀU -->
+    <div class="credit">cre: Đinh Bảo Nam</div>
+
+    <style>
+        .credit {
+            position: fixed;
+            bottom: 4px;
+            right: 6px;
+            font-size: 8px; /* nhỏ hơn nữa */
+            font-weight: bold;
+            opacity: 0.35; /* mờ hơn, khó thấy */
+            letter-spacing: 0.5px;
+            filter: blur(0.3px); /* hơi mờ */
+            background: linear-gradient(
+                90deg,
+                #ff4ecb,
+                #ff9ce3,
+                #ffd4f8,
+                #ff9ce3,
+                #ff4ecb
+            );
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: tinyGlow 6s infinite ease-in-out;
+            z-index: 9999;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        @keyframes tinyGlow {
+            0% { background-position: 0% 50%; opacity: 0.28; }
+            50% { background-position: 100% 50%; opacity: 0.42; }
+            100% { background-position: 0% 50%; opacity: 0.28; }
+        }
+    </style>
+
+</body>
+</html>
+
+</body>
+
+
+</html>
